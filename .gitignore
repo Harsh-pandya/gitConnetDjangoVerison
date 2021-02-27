@@ -127,3 +127,6 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+########## Please Add the gitignore for react app down here.############
+node_modules
