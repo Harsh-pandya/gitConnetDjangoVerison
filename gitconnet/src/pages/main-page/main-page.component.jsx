@@ -5,10 +5,10 @@ import { Link } from "react-router-dom";
 import CustomButton from "../../components/custom-button/custom-button.component";
 
 class MainPage extends React.Component {
-  constructor() {
-    super();
+  handleLogin() {
+    let scope = "user"
+    window.open(`https://github.com/login/oauth/authorize?client_id=b12992310cea8b04dcab&scope=${scope}`, "_self")
   }
-
   render() {
     return (
       <div className="main-page">
@@ -16,12 +16,10 @@ class MainPage extends React.Component {
           <h1>gitConnect</h1>
         </div>
         <div className="login-button">
-          <Link to="/search">
-            <CustomButton
-              title="Login"
-              onClick={() => this.props.data.handleLogin()}
-            />
-          </Link>
+          <CustomButton
+            title="Login"
+            onClick={() => this.handleLogin()}
+          />
         </div>
       </div>
     );

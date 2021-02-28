@@ -78,11 +78,6 @@ class UserProfile extends React.Component {
           imageText: "Web_Services",
         },
         {
-          key: 1,
-          imageURL: AWSSVG,
-          imageText: "Web_Services",
-        },
-        {
           key: 2,
           imageURL: BabelSVG,
           imageText: "Web Services",

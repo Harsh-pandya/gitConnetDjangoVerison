@@ -19,6 +19,8 @@ import ProjectEditSkill from "../../components/project-edit-skill/project-edit-s
 import CancelButton from "../../components/cancel-button/cancel-button.component";
 import FormTextbox from "../../components/form-textbox/form-textbox.component";
 import FormTextArea from "../../components/form-textarea/form-textarea.component";
+import axios from "axios";
+import { BASE_URL } from "../../constant";
 
 const customStyles = {
   menu: (provided, state) => ({
@@ -52,7 +54,7 @@ class UserProject extends React.Component {
       tempSkill: "",
       newProjectTitle: "",
       newProjectDescription: "",
-      newProjectURL: "",
+      newOpenings: "",
       newProjectSkills: [],
       selectedOption: null,
       github_projects: [
@@ -64,80 +66,86 @@ class UserProject extends React.Component {
         { value: "project-6", label: "project-6" },
         { value: "project-7", label: "project-7" },
       ],
-      projects: [
-        {
-          title: "project-1",
-          description:
-            "This is a small description of this project-1. BEtter fit in size to avoid overflow and make CSS ugly.",
-          skills: [
-            "python",
-            "reactJS",
-            "python",
-            "reactJS",
-            "python",
-            "reactJS",
-            "python",
-            "reactJS",
-            "python",
-            "reactJS",
-            "python",
-            "reactJS",
-            "python",
-            "reactJS",
-          ],
-          opening: 11,
-        },
-        {
-          title: "project-2",
-          description:
-            "This is a small description of this project-1. BEtter fit in size to avoid overflow and make CSS ugly.",
-          skills: ["python", "reactJS"],
-          opening: 11,
-        },
-        {
-          title: "project-3",
-          description:
-            "This is a small description of this project-1. BEtter fit in size to avoid overflow and make CSS ugly.",
-          skills: ["python", "reactJS"],
-          opening: 11,
-        },
-        {
-          title: "project-4",
-          description:
-            "This is a small description of this project-1. BEtter fit in size to avoid overflow and make CSS ugly.",
-          skills: ["python", "reactJS"],
-          opening: 11,
-        },
-        {
-          title: "project-5",
-          description:
-            "This is a small description of this project-1. BEtter fit in size to avoid overflow and make CSS ugly.",
-          skills: ["python", "reactJS"],
-          opening: 11,
-        },
-        {
-          title: "project-6",
-          description:
-            "This is a small description of this project-1. BEtter fit in size to avoid overflow and make CSS ugly.",
-          skills: ["python", "reactJS"],
-          opening: 11,
-        },
-        {
-          title: "project-7",
-          description:
-            "This is a small description of this project-1. BEtter fit in size to avoid overflow and make CSS ugly.",
-          skills: ["python", "reactJS"],
-          opening: 11,
-        },
-        {
-          title: "project-8",
-          description:
-            "This is a small description of this project-1. BEtter fit in size to avoid overflow and make CSS ugly.",
-          skills: ["python", "reactJS"],
-          opening: 11,
-        },
-      ],
+      projects: [],
     };
+  }
+  async componentDidMount() {
+    const response = await axios({
+      method: "GET",
+      url: `${BASE_URL}/fetch-project-list`,
+      withCredentials: true
+    })
+    this.setState({
+      "github_projects": response.data
+    })
+    const list_project = await axios({
+      method: "get",
+      url: `${BASE_URL}/list-project`,
+      withCredentials: true,
+    })
+    this.setState({
+      "projects": list_project.data
+    })
+  }
+  async save_details() {
+    const response = await axios({
+      method: "POST",
+      url: `${BASE_URL}/project`,
+      data: {
+        "projectTitle": this.state.newProjectTitle,
+        "projectDescription": this.state.newProjectDescription,
+        "projectSkills": this.state.newProjectSkills,
+        "projectOpenings": this.state.newOpenings,
+      },
+      withCredentials: true
+    })
+    this.setState({
+      isAddProject: false,
+      projects: this.state.projects,
+      newProjectTitle: "",
+      newProjectDescription: "",
+      newProjectSkills: [],
+      newOpenings: "",
+    });
+    const list_project = await axios({
+      method: "get",
+      url: `${BASE_URL}/list-project`,
+      withCredentials: true,
+    })
+    this.setState({
+      "projects": list_project.data
+    })
+    this.successNotification();
+  }
+  async update_details(id) {
+    const response = await axios({
+      method: "PUT",
+      url: `${BASE_URL}/project`,
+      data: this.state.projects[id],
+      withCredentials: true
+    })
+    this.setState({ "isEditProject": false })
+    this.successNotification();
+  }
+  async remove_details(id) {
+    console.log(this.state.projects[id]["_id"])
+    const response = await axios({
+      method: "DELETE",
+      url: `${BASE_URL}/project`,
+      data: {
+        "_id": this.state.projects[id]["_id"],
+      },
+      withCredentials: true
+    })
+    const list_project = await axios({
+      method: "get",
+      url: `${BASE_URL}/list-project`,
+      withCredentials: true,
+    })
+    this.setState({
+      "projects": list_project.data
+    })
+    this.removeNotification()
   }
 
   resetKey() {
@@ -155,13 +163,13 @@ class UserProject extends React.Component {
   };
 
   addSkill = (id) => {
-    this.state.projects[id].skills.unshift(this.state.tempSkill);
+    this.state.projects[id].projectSkills.unshift(this.state.tempSkill);
     this.setState(({ projects }) => ({
       projects: [
         ...projects.slice(0, id),
         {
           ...projects[id],
-          skills: this.state.projects[id].skills,
+          projectSkills: this.state.projects[id].projectSkills,
         },
         ...projects.slice(id + 1),
       ],
@@ -175,7 +183,7 @@ class UserProject extends React.Component {
         ...projects.slice(0, id),
         {
           ...projects[id],
-          skills: this.state.projects[id].skills.filter((skill) => {
+          projectSkills: this.state.projects[id].projectSkills.filter((skill) => {
             return skill !== remove_skill;
           }),
         },
@@ -200,19 +208,19 @@ class UserProject extends React.Component {
                 <div className="title-input">
                   <FormInput
                     placeholder="Enter Title"
-                    value={this.state.projects[id].title}
-                    onChange={(e) => {
-                      this.setState(({ projects }) => ({
-                        projects: [
-                          ...projects.slice(0, id),
-                          {
-                            ...projects[id],
-                            title: e.target.value,
-                          },
-                          ...projects.slice(id + 1),
-                        ],
-                      }));
-                    }}
+                    value={this.state.projects[id].projectTitle}
+                  // onChange={(e) => {
+                  //   this.setState(({ projects }) => ({
+                  //     projects: [
+                  //       ...projects.slice(0, id),
+                  //       {
+                  //         ...projects[id],
+                  //         projectTitle: e.target.value,
+                  //       },
+                  //       ...projects.slice(id + 1),
+                  //     ],
+                  //   }));
+                  // }}
                   />
                 </div>
               </div>
@@ -227,14 +235,14 @@ class UserProject extends React.Component {
                 <div className="discription-input">
                   <FormTextArea
                     placeholder="Enter Description"
-                    value={this.state.projects[id].description}
+                    value={this.state.projects[id].projectDescription}
                     onChange={(e) => {
                       this.setState(({ projects }) => ({
                         projects: [
                           ...projects.slice(0, id),
                           {
                             ...projects[id],
-                            description: e.target.value,
+                            projectDescription: e.target.value,
                           },
                           ...projects.slice(id + 1),
                         ],
@@ -254,14 +262,14 @@ class UserProject extends React.Component {
                 <div className="opening-input">
                   <FormInput
                     placeholder="Enter Project Opening"
-                    value={this.state.projects[id].opening}
+                    value={this.state.projects[id].projectOpenings}
                     onChange={(e) => {
                       this.setState(({ projects }) => ({
                         projects: [
                           ...projects.slice(0, id),
                           {
                             ...projects[id],
-                            opening: e.target.value,
+                            projectOpenings: e.target.value,
                           },
                           ...projects.slice(id + 1),
                         ],
@@ -294,7 +302,7 @@ class UserProject extends React.Component {
             <div className="user-project-edit-skill">
               <VerticalScroll height="300px">
                 <CardGrid gridColumn="1fr 1fr 1fr">
-                  {this.state.projects[id].skills.map((skill) => {
+                  {this.state.projects[id].projectSkills.map((skill) => {
                     return (
                       <ProjectEditSkill skill={skill}>
                         <CancelButton
@@ -313,8 +321,7 @@ class UserProject extends React.Component {
           <CustomButton
             title="Save Details"
             onClick={() => {
-              this.setState({ isEditProject: false });
-              this.successNotification();
+              this.update_details(id)
             }}
           />
         </div>
@@ -376,10 +383,10 @@ class UserProject extends React.Component {
                 </div>
                 <div className="opening-input">
                   <FormInput
-                    placeholder="Enter Project URL"
-                    value={this.state.newProjectURL}
+                    placeholder="Openings"
+                    value={this.state.newOpenings}
                     onChange={(e) => {
-                      this.setState({ newProjectURL: e.target.value });
+                      this.setState({ newOpenings: e.target.value });
                     }}
                   />
                 </div>
@@ -442,23 +449,7 @@ class UserProject extends React.Component {
             <div className="custom-save">
               <CustomButton
                 title="Save Details"
-                onClick={() => {
-                  this.state.projects.unshift({
-                    title: this.state.newProjectTitle,
-                    description: this.state.newProjectDescription,
-                    skills: this.state.newProjectSkills,
-                  });
-                  this.setState({
-                    isAddProject: false,
-                    projects: this.state.projects,
-                    newProjectTitle: "",
-                    newProjectDescription: "",
-                    newProjectSkills: [],
-                    newProjectURL: "",
-                  });
-                  console.log(this.state.projects);
-                  this.successNotification();
-                }}
+                onClick={() => { this.save_details() }}
               />
             </div>
             <div className="discard-save">
@@ -470,7 +461,7 @@ class UserProject extends React.Component {
                     newProjectTitle: "",
                     newProjectDescription: "",
                     newProjectSkills: [],
-                    newProjectURL: "",
+                    newOpenings: "",
                   });
                   this.discardNotification();
                 }}
@@ -490,35 +481,38 @@ class UserProject extends React.Component {
           <CardList>
             {
               (console.log(this.state),
-              this.state.projects.map((project) => (
-                <ProjectCardView
-                  projectTitle={project.title}
-                  projectDescription={project.description}
-                  projectSkill={project.skills}
-                  projectOpening={project.opening}
-                >
-                  <CardGrid gridColumn="1fr 1fr">
-                    <CustomButton
-                      title="Edit Details"
-                      onClick={() => (
-                        this.resetKey(),
-                        this.setState({
-                          isEditProject: true,
-                          editProjectKey: project.key,
-                        })
-                      )}
-                    />
-                    <CustomButton
-                      title="Remove Project"
-                      onClick={() => (
-                        this.resetKey(),
-                        this.removeProject(project.key),
-                        this.removeNotification()
-                      )}
-                    />
-                  </CardGrid>
-                </ProjectCardView>
-              )))
+                this.state.projects.map((project, project_id) => (
+                  <ProjectCardView
+                    projectTitle={project.projectTitle}
+                    projectDescription={project.projectDescription}
+                    projectSkill={project.projectSkills}
+                    projectOpening={project.projectOpenings}
+                  >
+                    <CardGrid gridColumn="1fr 1fr">
+                      <CustomButton
+                        title="Edit Details"
+                        onClick={() => (
+                          this.resetKey(),
+                          this.setState({
+                            isEditProject: true,
+                            editProjectKey: project.key,
+                          })
+                        )}
+                      />
+                      <CustomButton
+                        title="Remove Project"
+                        onClick={() => {
+                          this.resetKey();
+                          this.remove_details(project_id)
+                        }
+
+                          // this.removeProject(project.key),
+                          // this.removeNotification()
+                        }
+                      />
+                    </CardGrid>
+                  </ProjectCardView>
+                )))
             }
           </CardList>
         </VerticalScroll>

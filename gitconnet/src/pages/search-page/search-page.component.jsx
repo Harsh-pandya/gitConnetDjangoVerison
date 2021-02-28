@@ -12,6 +12,7 @@ import CardGrid from "../../components/cardgrid/cardgrid.component";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import axios from "axios";
+import { BASE_URL } from "../../constant";
 
 class SearchPage extends React.Component {
   constructor() {
@@ -197,9 +198,9 @@ class SearchPage extends React.Component {
     })
     axios({
       method: "GET",
-      url: "http://localhost:8000/api/test-endpoint/",
-      data: {
-        search: this.state.searchQuery
+      url: `${BASE_URL}/search-page`,
+      params: {
+        "search_query": this.state.searchQuery
       },
       withCredentials: true
     }).then((response) => {

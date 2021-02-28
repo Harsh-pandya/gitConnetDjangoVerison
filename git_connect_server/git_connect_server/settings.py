@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "rest_framework",
     "corsheaders",
+    "django_middleware_global_request",
 ]
 
 MIDDLEWARE = [
@@ -50,6 +51,7 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "corsheaders.middleware.CorsMiddleware",
+    "django_middleware_global_request.middleware.GlobalRequestMiddleware",
 ]
 
 ROOT_URLCONF = "git_connect_server.urls"
@@ -78,11 +80,15 @@ WSGI_APPLICATION = "git_connect_server.wsgi.application"
 
 DATABASES = {
     "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
+        "ENGINE": "django.db.backends.mysql",
+        "NAME": "git_connect_core",
+        "USER": "git_connect_user",
+        "PASSWORD": "umang_loves_fortnite",
+        "HOST": "127.0.0.1",
+        "PORT": "3306",
+        "ATOMIC_REQUESTS": True,
     }
 }
-
 
 # Password validation
 # https://docs.djangoproject.com/en/3.1/ref/settings/#auth-password-validators

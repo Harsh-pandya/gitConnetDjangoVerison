@@ -7,55 +7,59 @@ import Notification from './pages/notification/notification.component';
 import SearchPage from './pages/search-page/search-page.component';
 import MainPage from './pages/main-page/main-page.component';
 import React, { useState } from 'react';
+import { BASE_URL } from './constant'
+import { Switch, BrowserRouter as Router, Route, Redirect } from 'react-router-dom';
+import axios from 'axios';
 
-import { Switch, BrowserRouter as Router, Route } from 'react-router-dom';
 
+function PrivateRoute({ exact, path, component: Component }) {
+  const [login, setLogin] = React.useState(false)
+  const validate = async () => {
+    const response = await axios({
+      method: "POST",
+      url: `${BASE_URL}/page-validation`,
+      withCredentials: true
+    })
+    if (response.data.status === "OK") {
+      setLogin(true)
+    }
+    else if (response.data.status === "ERROR") {
+      setLogin(false)
+    }
+    return login
+  }
+  return (
+    validate() ? (
+      <>
+        <Route exact path={path} component={Component} />
+      </>
+    ) : (
+        <>
+          <Redirect to="/" />
+        </>
+      )
+  )
 
+}
 class App extends React.Component {
 
-  constructor() {
-    super();
 
-    this.state = {
-      isLogin: true,
-    }
-  }
-
-  handleLogin() {
-    let scope = "user"
-    window.open(`https://github.com/login/oauth/authorize?client_id=b12992310cea8b04dcab&scope=${scope}`)
-  }
 
   renderPage() {
-    if (this.state.isLogin) {
-      return (
-        <Router>
-          <Header handleLogin={this.handleLogin.bind(this)} />
-          <br /><br />
-          <Switch>
-            <Route exact path="/search" component={SearchPage} />
-            <Route exact path="/profile" component={UserProfile} />
-            <Route exact path="/projects" component={UserProject} />
-            <Route exact path="/notifications" component={Notification} />
-            <Route component={PageNotFound} />
-          </Switch>
-        </Router>
-      )
-    }
-    else {
-      return (
-        <Router>
-          <Switch>
-            <Route exact path="/">
-              <MainPage data={{
-                isLogin: this.state.isLogin,
-                handleLogin: this.handleLogin.bind(this)
-              }} />
-            </Route>
-          </Switch>
-        </Router>
-      )
-    }
+    return (
+      <Router>
+        <Header />
+        <br /><br />
+        <Switch>
+          <Route exact path="/" component={MainPage} />
+          <PrivateRoute exact path="/search" component={SearchPage} />
+          <PrivateRoute exact path="/profile" component={UserProfile} />
+          <PrivateRoute exact path="/projects" component={UserProject} />
+          <PrivateRoute exact path="/notifications" component={Notification} />
+          <Route component={PageNotFound} />
+        </Switch>
+      </Router>
+    )
   }
 
   render() {
