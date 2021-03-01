@@ -21,36 +21,12 @@ class Notification extends React.Component {
     this.state = {
       collabrations: [
         {
-          user: "purvesh",
-          requestedProject: "gitConnet-1",
+          user: "purvesh", //user-name
+          requestedProject: "gitConnet-1", //project-name
         },
         {
           user: "purvesh",
           requestedProject: "gitConnet-2",
-        },
-        {
-          user: "purvesh",
-          requestedProject: "gitConnet-3",
-        },
-        {
-          user: "purvesh",
-          requestedProject: "gitConnet-4",
-        },
-        {
-          user: "purvesh",
-          requestedProject: "gitConnet-5",
-        },
-        {
-          user: "purvesh",
-          requestedProject: "gitConnet-6",
-        },
-        {
-          user: "purvesh",
-          requestedProject: "gitConnet-7",
-        },
-        {
-          user: "purvesh",
-          requestedProject: "gitConnet-8",
         },
       ],
       contributions: [
@@ -61,46 +37,6 @@ class Notification extends React.Component {
         {
           status: "Ongoing",
           requestedProject: "gitConnet-2",
-        },
-        {
-          status: "Ongoing",
-          requestedProject: "gitConnet-3",
-        },
-        {
-          status: "Ongoing",
-          requestedProject: "gitConnet-4",
-        },
-        {
-          status: "Ongoing",
-          requestedProject: "gitConnet-5",
-        },
-        {
-          status: "Ongoing",
-          requestedProject: "gitConnet-6",
-        },
-        {
-          status: "Ongoing",
-          requestedProject: "gitConnet-7",
-        },
-        {
-          status: "Ongoing",
-          requestedProject: "gitConnet-8",
-        },
-        {
-          status: "Ongoing",
-          requestedProject: "gitConnet-9",
-        },
-        {
-          status: "Ongoing",
-          requestedProject: "gitConnet-10",
-        },
-        {
-          status: "Ongoing",
-          requestedProject: "gitConnet-11",
-        },
-        {
-          status: "Ongoing",
-          requestedProject: "gitConnet-12",
         },
       ],
     };
