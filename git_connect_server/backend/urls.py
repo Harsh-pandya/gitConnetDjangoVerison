@@ -8,6 +8,9 @@ from backend.views import (
     GithubRepositoryList,
     ProjectView,
     ListProject,
+    UserView,
+    BookmarkView,
+    ContributionView,
 )
 
 urls = [
@@ -22,4 +25,7 @@ urls = [
     ),
     path("project", ProjectView.as_view(), name="ProjectView"),
     path("list-project", ListProject.as_view(), name="ListProject"),
+    path("user-view", UserView.as_view(), name="UserView"),
+    path("bookmark-view", BookmarkView.as_view(), name="BookmarkView"),
+    path("contribution-view", ContributionView.as_view(), name="ContributionView"),
 ]

@@ -485,7 +485,7 @@ class UserProject extends React.Component {
                   <ProjectCardView
                     projectTitle={project.projectTitle}
                     projectDescription={project.projectDescription}
-                    projectSkill={project.projectSkills}
+                    projectSkills={project.projectSkills}
                     projectOpening={project.projectOpenings}
                   >
                     <CardGrid gridColumn="1fr 1fr">

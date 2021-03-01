@@ -9,6 +9,9 @@ from backend.handler import (
     SearchPageHandler,
     GithubProjectList,
     ProjectHandler,
+    UserHandler,
+    BookmarkHandler,
+    ContributionHandler,
 )
 import json
 
@@ -63,6 +66,7 @@ class GithubRepositoryList(APIView):
 class ListProject(APIView):
     def get(self, request: Request):
         project_list = ProjectHandler.fetch_and_get_list_of_owner_project()
+        print(project_list)
         return Response(data=project_list)
 
 
@@ -83,6 +87,37 @@ class ProjectView(APIView):
         return Response()
 
 
+class BookmarkView(APIView):
+    def delete(self, request: Request):
+        data = json.loads(request.body)
+        BookmarkHandler.fetch_and_remove_bookmark_info(bookmark_dict=data)
+        return Response()
+
+    def post(self, request: Request):
+        data = json.loads(request.body)
+        BookmarkHandler.fetch_and_add_bookmark_info(bookmark_dict=data)
+        return Response()
+
+
+class ContributionView(APIView):
+    def delete(self, request: Request):
+        data = json.loads(request.body)
+        print(data)
+        ContributionHandler.fetch_and_remove_contribution_info(contribution_dict=data)
+        return Response()
+
+    def post(self, request: Request):
+        data = json.loads(request.body)
+        ContributionHandler.fetch_and_add_contribution_info(contribution_dict=data)
+        return Response()
+
+
 class UserView(APIView):
     def get(self, request: Request):
-        pass
+        user_dict = UserHandler.fetch_and_create_user_info()
+        return Response(data=user_dict)
+
+    def put(self, request: Request):
+        data = json.loads(request.body)
+        UserHandler.fetch_and_update_user_info(user_info=data)
+        return Response()

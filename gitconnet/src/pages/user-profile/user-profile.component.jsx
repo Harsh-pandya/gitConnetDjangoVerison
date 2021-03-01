@@ -54,6 +54,8 @@ import StackoverflowSVG from "../../media/stackoverflow.svg";
 import PlusSVG from "../../media/plus.svg";
 import BookmarkCard from "../../components/bookmark-card/bookmark-card.component";
 import ContributionCard from "../../components/contribution-card/contribution-card.component";
+import axios from "axios";
+import { BASE_URL } from "../../constant";
 
 class UserProfile extends React.Component {
   constructor(props) {
@@ -61,45 +63,17 @@ class UserProfile extends React.Component {
 
     this.state = {
       isEdit: false,
-      username: "Purvesh Patel",
-      userid: "purveshpatel511",
-      email: "purvesh@gmail.com",
-      avatar:
-        "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Ftse2.mm.bing.net%2Fth%3Fid%3DOIP.WMW5O73STEkG9WnBALx2bQAAAA%26pid%3DApi&f=1",
-      githubURL: "https://github.com",
-      linkedinURL: "https://linkedin.com",
-      stackoverflowURL: "https://stackoverflow.com",
+      username: "",
+      userid: "",
+      email: "",
+      avatar: "",
+      githubURL: "",
+      linkedinURL: "",
+      stackoverflowURL: "",
       tempSkill: "",
-      skills: [
-        {
-          imageURL: AWSSVG,
-          imageText: "Web_Services",
-        },
-        {
-          imageURL: BabelSVG,
-          imageText: "Web Services",
-        },
-      ],
-      bookmarks: [
-        {
-          projectTitle: "Project-1",
-          projectDescription: "This is small description about project.",
-        },
-        {
-          projectTitle: "Project-2",
-          projectDescription: "This is small description about project.",
-        },
-      ],
-      contributions: [
-        {
-          projectTitle: "Project-1",
-          projectDescription: "This is small description about project.",
-        },
-        {
-          projectTitle: "Project-1",
-          projectDescription: "This is small description about project.",
-        },
-      ],
+      skills: [],
+      bookmarks: [],
+      contributions: [],
     };
   }
 
@@ -110,6 +84,93 @@ class UserProfile extends React.Component {
   removeNotification() {
     toast.error("Bookmark Removed.");
   }
+  async componentDidMount() {
+    const response = await axios({
+      method: "GET",
+      url: `${BASE_URL}/user-view`,
+      withCredentials: true
+    })
+    let user_dict = response.data
+    for (let index = 0; index < user_dict["skills"].length; index++) {
+      let ele = user_dict["skills"][index]
+      user_dict["skills"][index] = this.mapSkill(ele)
+    }
+    this.setState({
+      username: user_dict["username"],
+      userid: user_dict["userid"],
+      email: user_dict["email"],
+      avatar: user_dict["avatar"],
+      githubURL: user_dict["githubURL"],
+      linkedinURL: user_dict["linkedinURL"],
+      stackoverflowURL: user_dict["stackoverflowURL"],
+      skills: user_dict["skills"],
+      bookmarks: user_dict["bookmarks"],
+      contributions: user_dict["contributions"],
+    })
+  }
+
+  async save_details() {
+    const response = await axios({
+      method: "PUT",
+      data: {
+        "username": this.state.username,
+        "userid": this.state.userid,
+        "email": this.state.email,
+        "avatar": this.state.avatar,
+        "githubURL": this.state.githubURL,
+        "linkedinURL": this.state.linkedinURL,
+        "stackoverflowURL": this.state.stackoverflowURL,
+        "skills": this.state.skills,
+      },
+      withCredentials: true,
+      url: `${BASE_URL}/user-view`
+    })
+    this.setState({ isEdit: false });
+
+    this.successNotification();
+  }
+
+  async remove_bookmark(id) {
+    const bookmark_response = await axios({
+      method: "DELETE",
+      url: `${BASE_URL}/bookmark-view`,
+      data: this.state.bookmarks[id],
+      withCredentials: true
+    })
+    const response = await axios({
+      method: "GET",
+      url: `${BASE_URL}/user-view`,
+      withCredentials: true
+    })
+    let user_dict = response.data
+    for (let index = 0; index < user_dict["skills"].length; index++) {
+      let ele = user_dict["skills"][index]
+      user_dict["skills"][index] = this.mapSkill(ele)
+    }
+    this.setState({
+      username: user_dict["username"],
+      userid: user_dict["userid"],
+      email: user_dict["email"],
+      avatar: user_dict["avatar"],
+      githubURL: user_dict["githubURL"],
+      linkedinURL: user_dict["linkedinURL"],
+      stackoverflowURL: user_dict["stackoverflowURL"],
+      skills: user_dict["skills"],
+      bookmarks: user_dict["bookmarks"],
+      contributions: user_dict["contributions"],
+    })
+    // this.setState({
+    //   bookmarks: this.state.bookmarks.filter(
+    //     (removeBookmark) => {
+    //       return (
+    //         removeBookmark.projectTitle !==
+    //         bookmark.projectTitle
+    //       );
+    //     }
+    //   ),
+    // });
+    this.removeNotification();
+  }
 
   renderSaveButton() {
     toast.configure();
@@ -118,8 +179,7 @@ class UserProfile extends React.Component {
         <CustomButton
           title="Save"
           onClick={() => {
-            this.setState({ isEdit: false });
-            this.successNotification();
+            this.save_details()
           }}
         />
       );
@@ -487,7 +547,7 @@ class UserProfile extends React.Component {
     }
 
     return {
-      imageText: logoName,
+      imageText: skill,
       imageURL: logoURL,
     }
   };
@@ -670,17 +730,17 @@ class UserProfile extends React.Component {
               <CardGrid gridColumn="1fr 1fr 1fr 1fr">
                 {this.resetKey(),
                   this.state.skills.map((skill) => (
-                  <div className="remove-skill-card">
-                    <SkillCard
-                      id={skill.key}
-                      imageURL={skill.imageURL}
-                      imageText={skill.imageText}
-                    />
-                    <CancelButton
-                      onClick={(e) => this.removeSkillss(skill.key)}
-                    />
-                  </div>
-                ))}
+                    <div className="remove-skill-card">
+                      <SkillCard
+                        id={skill.key}
+                        imageURL={skill.imageURL}
+                        imageText={skill.imageText}
+                      />
+                      <CancelButton
+                        onClick={(e) => this.removeSkillss(skill.key)}
+                      />
+                    </div>
+                  ))}
               </CardGrid>
             </div>
           </VerticalScroll>
@@ -693,19 +753,20 @@ class UserProfile extends React.Component {
             <CardGrid gridColumn="1fr 1fr 1fr 1fr">
               {this.resetKey(),
                 this.state.skills.map((skill) => (
-                <SkillCard
-                  id={skill.key}
-                  imageURL={skill.imageURL}
-                  imageText={skill.imageText}
-                  isRemove="false"
-                />
-              ))}
+                  <SkillCard
+                    id={skill.key}
+                    imageURL={skill.imageURL}
+                    imageText={skill.imageText}
+                    isRemove="false"
+                  />
+                ))}
             </CardGrid>
           </div>
         </VerticalScroll>
       );
     }
   }
+
 
   render() {
     return (
@@ -737,7 +798,7 @@ class UserProfile extends React.Component {
               <VerticalScroll height="300px">
                 <br />
                 <CardGrid gridColumn="1fr 1fr 1fr">
-                  {this.state.bookmarks.map((bookmark) => (
+                  {this.state.bookmarks.map((bookmark, id) => (
                     <BookmarkCard
                       projectTitle={bookmark.projectTitle}
                       projectDescription={bookmark.projectDescription}
@@ -745,17 +806,7 @@ class UserProfile extends React.Component {
                       <CustomButton
                         title="Remove"
                         onClick={() => {
-                          this.setState({
-                            bookmarks: this.state.bookmarks.filter(
-                              (removeBookmark) => {
-                                return (
-                                  removeBookmark.projectTitle !==
-                                  bookmark.projectTitle
-                                );
-                              }
-                            ),
-                          });
-                          this.removeNotification();
+                          this.remove_bookmark(id)
                         }}
                       />
                     </BookmarkCard>

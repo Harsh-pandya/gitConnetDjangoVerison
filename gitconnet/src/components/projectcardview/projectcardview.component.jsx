@@ -21,15 +21,15 @@ const ProjectCardView = (props) => {
       <br />
       <br />
       <div className="skills-block">
-        {props.projectSkill.slice(0, 5).map((skill) => (
+        {props.projectSkills.slice(0, 5).map((skill) => (
           <Card>
             <span className="project-skill">{skill}</span>
           </Card>
         ))}
-        {props.projectSkill.length - 5 > 0 ? (
+        {props.projectSkills.length - 5 > 0 ? (
           <Card>
             <span className="project-skill">
-              +{props.projectSkill.length - 5} More
+              +{props.projectSkills.length - 5} More
             </span>
           </Card>
         ) : null}

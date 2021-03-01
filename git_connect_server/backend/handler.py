@@ -134,6 +134,8 @@ class SearchPageHandler:
         user_bookmarks = user["bookmarks"]
         user_contributions = user["contributions"]
         user_outgoing = user["outgoing"]
+        print("USER BOOMARK ______", user_bookmarks)
+        print("USER OUTGOING _______", user_outgoing)
         try:
             project_id_list = search[search_info["search_query"]]
         except KeyError:
@@ -144,19 +146,38 @@ class SearchPageHandler:
             projects_list = list()
             for id in project_id_list:
                 project = project_collection.find_one({"_id": id})
-                project["bookmark"] = True if id in user_bookmarks else False
-                project["requested"] = (
-                    True if id in user_contributions or id in user_outgoing else False
-                )
+                if project == None:
+                    continue
+                if user_bookmarks == None:
+                    project["bookmark"] = False
+                else:
+                    project["bookmark"] = True if id in user_bookmarks else False
+                if user_outgoing == None:
+                    print("IF ID _____", id)
+                    project["contribution"] = False
+
+                else:
+                    print("ELSE ID _____", id)
+
+                    project["contribution"] = True if id in user_outgoing else False
                 projects_list.append(project)
+            print("____________-------------", projects_list)
             return projects_list
         else:
             return []
 
     @staticmethod
-    def create_and_fetch_search_details(search_query):
-        search_info = {"USER_ID": get_user_object_id(), "search_query": search_query}
-        return SearchPageHandler.fetch_project(search_info=search_info)
+    def create_and_fetch_search_details(search_query: str):
+        search_query = search_query.strip()
+        search_info = {
+            "USER_ID": ObjectId(get_user_object_id()),
+            "search_query": search_query,
+        }
+        project_list = SearchPageHandler.fetch_project(search_info=search_info)
+        for project in project_list:
+            project["_id"] = str(project["_id"])
+            project["owner"] = str(project["owner"])
+        return project_list
 
 
 class ProjectHandler:
@@ -314,7 +335,31 @@ class ProjectHandler:
 
     @staticmethod
     def remove_project(project_info):
+        old_skills = set(
+            project_collection.find_one({"_id": project_info["PROJECT_ID"]})[
+                "projectSkills"
+            ]
+        )
+        remove_to_search = list(old_skills)
         project_collection.delete_one({"_id": project_info["PROJECT_ID"]})
+        search_data = search_collection.find_one({"_id": SEARCH_ID})
+        for remove in remove_to_search:
+            try:
+                value_list = search_data[remove]
+                value_list.remove(project_info["PROJECT_ID"])
+                search_collection.find_one_and_update(
+                    {"_id": SEARCH_ID},
+                    {
+                        "$set": {
+                            remove: value_list,
+                        }
+                    },
+                    upsert=False,
+                )
+            except:
+                raise ValueError(
+                    f"This is never gone be executed, find remove_tag {remove}"
+                )
         user_owner = user_collection.find_one({"_id": project_info["USER_ID"]})["owner"]
         user_owner.remove(project_info["PROJECT_ID"])
         user_collection.find_one_and_update(
@@ -368,6 +413,304 @@ class ProjectHandler:
         project_data["_id"] = ObjectId(project_data["_id"])
         project_data["owner"] = ObjectId(project_data["owner"])
         ProjectHandler.update_project(project_info=project_data)
+
+
+class UserHandler:
+    @staticmethod
+    def fetch_user(user_id):
+        """
+        fuction returns user details of specified user_id.
+
+        Args:
+            user_id (bson.onject.ObjectId)
+
+        Returns:
+            dict: return dict contains following fields,
+                username
+                userid
+                email
+                avatar
+                githubURL
+                linkedinURL
+                stackoverflowURL
+                skills
+                bookmarks
+                contributions
+        """
+        user = user_collection.find_one({"_id": user_id})
+        user_bookmarks = list()
+        for project_id in user["bookmarks"]:
+            project = project_collection.find_one({"_id": project_id})
+            if project is None:
+                continue
+            bookmark_details = {
+                "PROJECT_ID": str(project_id),
+                "projectTitle": project["projectTitle"],
+                "projectDescription": project["projectDescription"],
+            }
+            user_bookmarks.append(bookmark_details)
+        user_contributions = list()
+        for project_id in user["contributions"]:
+            project = project_collection.find_one({"_id": project_id})
+            if project is None:
+                continue
+            contribution_details = {
+                "projectTitle": project["projectTitle"],
+                "projectDescription": project["projectDescription"],
+            }
+            user_contributions.append(contribution_details)
+        user_dict = {
+            "username": user["username"],
+            "userid": user["userid"],
+            "email": user["email"],
+            "avatar": user["avatar"],
+            "githubURL": user["githubURL"],
+            "linkedinURL": user["linkedinURL"],
+            "stackoverflowURL": user["stackoverflowURL"],
+            "skills": user["skills"],
+            "bookmarks": user_bookmarks,
+            "contributions": user_contributions,
+        }
+        return user_dict
+
+    @staticmethod
+    def update_user_profile(user_info):
+        """
+        update user profile based on user_id.
+
+        Args:
+            user_info (dict): user_info contains following field,
+                USER_ID (bson.object.ObjectId)
+                username (string)
+                email (string)
+                avatar (string)
+                githubURL (string)
+                linkedinURL (string)
+                stackoverflowURL (string)
+                skills (array)
+        """
+        user_id = user_info["USER_ID"]
+        user_collection.find_one_and_update(
+            {"_id": user_id},
+            {
+                "$set": {
+                    "username": user_info["username"],
+                    "email": user_info["email"],
+                    "avatar": user_info["avatar"],
+                    "githubURL": user_info["githubURL"],
+                    "linkedinURL": user_info["linkedinURL"],
+                    "stackoverflowURL": user_info["stackoverflowURL"],
+                    "skills": user_info["skills"],
+                }
+            },
+            upsert=False,
+        )
+
+    @staticmethod
+    def fetch_and_create_user_info():
+        user_object_id = ObjectId(get_user_object_id())
+        user_dict = UserHandler.fetch_user(user_id=user_object_id)
+        return user_dict
+
+    @staticmethod
+    def fetch_and_update_user_info(user_info):
+        user_dict = {
+            "USER_ID": ObjectId(get_user_object_id()),
+            "username": user_info["username"],
+            "email": user_info["email"],
+            "avatar": user_info["avatar"],
+            "githubURL": user_info["githubURL"],
+            "linkedinURL": user_info["linkedinURL"],
+            "stackoverflowURL": user_info["stackoverflowURL"],
+            "skills": [item["imageText"] for item in user_info["skills"]],
+        }
+        UserHandler.update_user_profile(user_info=user_dict)
+
+
+class ContributionHandler:
+    @staticmethod
+    def request_contribution(project_info):
+        """
+        user can request for contribution on project.
+        after request, (user_id,project_id) details add in
+        incoming list of project owner.
+
+        Args:
+            project_info (dict): contains following fields,
+                USER_ID (bson.object.ObjectId)
+                PROJECT_ID (bson.object.ObjectId)
+                OWNER_ID (bson.object.ObjectId)
+        """
+        owner = user_collection.find_one({"_id": project_info["OWNER_ID"]})
+        incoming_list = owner["incoming"]
+        incoming_list.append(
+            {
+                "user_id": project_info["USER_ID"],
+                "project_id": project_info["PROJECT_ID"],
+            }
+        )
+        user_collection.find_one_and_update(
+            {"_id": project_info["OWNER_ID"]},
+            {
+                "$set": {
+                    "incoming": incoming_list,
+                }
+            },
+            upsert=False,
+        )
+        user = user_collection.find_one({"_id": project_info["USER_ID"]})
+        user_outgoing = user["outgoing"]
+        user_outgoing.append(project_info["PROJECT_ID"])
+        user_collection.find_one_and_update(
+            {"_id": project_info["USER_ID"]},
+            {
+                "$set": {
+                    "outgoing": user_outgoing,
+                }
+            },
+            upsert=False,
+        )
+
+    @staticmethod
+    def remove_contribution(project_info):
+        """
+        user can take back his contribution request.
+        after take back request, user outgoing_list and
+        project owner incoming_list is updated.
+
+        Args:
+            project_info (dict): contains following fields,
+                USER_ID (bson.object.ObjectId)
+                PROJECT_ID (bson.object.ObjectId)
+                OWNER_ID (bson.object.ObjectId)
+        """
+        owner = user_collection.find_one({"_id": project_info["OWNER_ID"]})
+        incoming_list = owner["incoming"]
+        incoming_list.remove(
+            {
+                "user_id": project_info["USER_ID"],
+                "project_id": project_info["PROJECT_ID"],
+            }
+        )
+        user_collection.find_one_and_update(
+            {"_id": project_info["OWNER_ID"]},
+            {
+                "$set": {
+                    "incoming": incoming_list,
+                }
+            },
+            upsert=False,
+        )
+        user = user_collection.find_one({"_id": project_info["USER_ID"]})
+        user_outgoing = user["outgoing"]
+        user_outgoing.remove(project_info["PROJECT_ID"])
+        user_collection.find_one_and_update(
+            {"_id": project_info["USER_ID"]},
+            {
+                "$set": {
+                    "outgoing": user_outgoing,
+                }
+            },
+            upsert=False,
+        )
+
+    @staticmethod
+    def fetch_and_remove_contribution_info(contribution_dict):
+        contribution_info = {
+            "USER_ID": ObjectId(get_user_object_id()),
+            "PROJECT_ID": ObjectId(contribution_dict["PROJECT_ID"]),
+            "OWNER_ID": ObjectId(contribution_dict["OWNER_ID"]),
+        }
+        print("Contribution Dict __________@#_#", contribution_info)
+
+        ContributionHandler.remove_contribution(project_info=contribution_info)
+
+    @staticmethod
+    def fetch_and_add_contribution_info(contribution_dict):
+        contribution_info = {
+            "USER_ID": ObjectId(get_user_object_id()),
+            "PROJECT_ID": ObjectId(contribution_dict["PROJECT_ID"]),
+            "OWNER_ID": ObjectId(contribution_dict["OWNER_ID"]),
+        }
+        print("Contribution Dict __________@#_#", contribution_info)
+
+        ContributionHandler.request_contribution(project_info=contribution_info)
+
+
+class BookmarkHandler:
+    @staticmethod
+    def handle_bookmark(user_id, project_id, status):
+        """
+        add or remove bookmark basedo on status.
+        if status is `True` then add bookmark,
+        else remove bookmark.
+
+        Args:
+            user_id (bson.object.ObjectId)
+            project_id (bson.object.ObjectId)
+            status (bool)
+        """
+        user = user_collection.find_one({"_id": user_id})
+        bookmark_list = user["bookmarks"]
+        if status:
+            bookmark_list.append(project_id)
+        else:
+            bookmark_list.remove(project_id)
+        user_collection.find_one_and_update(
+            {"_id": user_id},
+            {
+                "$set": {
+                    "bookmarks": bookmark_list,
+                }
+            },
+            upsert=False,
+        )
+
+    @staticmethod
+    def remove_bookmark(bookmark_info):
+        """
+        remove bookmark from user_bookmarks by removing
+        project_id.
+
+        Args:
+            bookmark_info (dict):
+                USER_ID (bson.object.ObjectId)
+                PROJECT_ID (bson.object.ObjectId)
+        """
+        BookmarkHandler.handle_bookmark(
+            bookmark_info["USER_ID"], bookmark_info["PROJECT_ID"], status=False
+        )
+
+    @staticmethod
+    def add_bookmark(bookmark_info):
+        """
+        add PROJECT_ID to user bookmarks list.
+
+        Args:
+            bookmark_info (dict):
+                USER_ID (bson.object.ObjectId)
+                PROJECT_ID (bson.object.ObjectId)
+        """
+        BookmarkHandler.handle_bookmark(
+            bookmark_info["USER_ID"], bookmark_info["PROJECT_ID"], status=True
+        )
+
+    @staticmethod
+    def fetch_and_remove_bookmark_info(bookmark_dict):
+        bookmark_info = {
+            "USER_ID": ObjectId(get_user_object_id()),
+            "PROJECT_ID": ObjectId(bookmark_dict["PROJECT_ID"]),
+        }
+        BookmarkHandler.remove_bookmark(bookmark_info=bookmark_info)
+
+    @staticmethod
+    def fetch_and_add_bookmark_info(bookmark_dict):
+        bookmark_info = {
+            "USER_ID": ObjectId(get_user_object_id()),
+            "PROJECT_ID": ObjectId(bookmark_dict["PROJECT_ID"]),
+        }
+
+        BookmarkHandler.add_bookmark(bookmark_info=bookmark_info)
 
 
 class GithubProjectList:
