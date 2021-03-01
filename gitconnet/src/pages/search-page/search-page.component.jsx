@@ -26,56 +26,9 @@ class SearchPage extends React.Component {
           projectTitle: "gitConnect-1",
           projectDescription: "This is small project for testing.",
           projectSkill: ["python", "aws", "babel", "aws", "babel"],
+          projectGithubURL: "https://github.com/",
           bookmark: false,//aa nathi
           requested: false,// aa nathi
-        },
-        {
-          user: "purvesh",
-          projectTitle: "gitConnect-2",
-          projectDescription: "This is small project for testing.",
-          projectSkill: ["reactjs", "aws", "babel"],
-          bookmark: true,
-          requested: false,
-        },
-        {
-          user: "purvesh",
-          projectTitle: "gitConnect-3",
-          projectDescription: "This is small project for testing.",
-          projectSkill: ["aws", "babel"],
-          bookmark: false,
-          requested: false,
-        },
-        {
-          user: "purvesh",
-          projectTitle: "gitConnect-4",
-          projectDescription: "This is small project for testing.",
-          projectSkill: ["reactjs", "aws"],
-          bookmark: false,
-          requested: false,
-        },
-        {
-          user: "purvesh",
-          projectTitle: "gitConnect-5",
-          projectDescription: "This is small project for testing.",
-          projectSkill: ["python", "babel"],
-          bookmark: false,
-          requested: false,
-        },
-        {
-          user: "purvesh",
-          projectTitle: "gitConnect-6",
-          projectDescription: "This is small project for testing.",
-          projectSkill: ["reactjs", "aws", "babel"],
-          bookmark: false,
-          requested: false,
-        },
-        {
-          user: "purvesh",
-          projectTitle: "gitConnect-7",
-          projectDescription: "This is small project for testing.",
-          projectSkill: ["python", "reactjs", "aws", "babel"],
-          bookmark: false,
-          requested: false,
         },
       ],
     };
@@ -262,7 +215,7 @@ class SearchPage extends React.Component {
                           <CustomButton
                             title="Github"
                             onClick={() =>
-                              window.open("https://github.com", "_blank")
+                              window.open(project.projectGithubURL, "_blank")
                             }
                           />
                           {this.renderRequested(project.requested, project.key)}

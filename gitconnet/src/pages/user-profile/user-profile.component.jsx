@@ -61,110 +61,22 @@ class UserProfile extends React.Component {
 
     this.state = {
       isEdit: false,
-      name: "Purvesh Patel",
+      username: "Purvesh Patel",
       userid: "purveshpatel511",
       email: "purvesh@gmail.com",
       avatar:
         "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Ftse2.mm.bing.net%2Fth%3Fid%3DOIP.WMW5O73STEkG9WnBALx2bQAAAA%26pid%3DApi&f=1",
-      github: "https://github.com",
-      linkedin: "https://linkedin.com",
-      stackoverflow: "https://stackoverflow.com",
+      githubURL: "https://github.com",
+      linkedinURL: "https://linkedin.com",
+      stackoverflowURL: "https://stackoverflow.com",
       tempSkill: "",
-      skillCount: 20,
       skills: [
         {
-          key: 1,
           imageURL: AWSSVG,
           imageText: "Web_Services",
         },
         {
-          key: 2,
           imageURL: BabelSVG,
-          imageText: "Web Services",
-        },
-        {
-          key: 3,
-          imageURL: BackBonejsSVG,
-          imageText: "Web Services",
-        },
-        {
-          key: 4,
-          imageURL: CPlusPlusSVG,
-          imageText: "Web Services",
-        },
-        {
-          key: 5,
-          imageURL: CodeIgniterSVG,
-          imageText: "Web Services",
-        },
-        {
-          key: 6,
-          imageURL: CodeIgniterSVG,
-          imageText: "Web Services",
-        },
-        {
-          key: 7,
-          imageURL: CodeIgniterSVG,
-          imageText: "Web Services",
-        },
-        {
-          key: 8,
-          imageURL: BabelSVG,
-          imageText: "Web Services",
-        },
-        {
-          key: 9,
-          imageURL: BackBonejsSVG,
-          imageText: "Web Services",
-        },
-        {
-          key: 10,
-          imageURL: CPlusPlusSVG,
-          imageText: "Web Services",
-        },
-        {
-          key: 11,
-          imageURL: CodeIgniterSVG,
-          imageText: "Web Services",
-        },
-        {
-          key: 12,
-          imageURL: CodeIgniterSVG,
-          imageText: "Web Services",
-        },
-        {
-          key: 13,
-          imageURL: CodeIgniterSVG,
-          imageText: "Web Services",
-        },
-        {
-          key: 14,
-          imageURL: BabelSVG,
-          imageText: "Web Services",
-        },
-        {
-          key: 15,
-          imageURL: BackBonejsSVG,
-          imageText: "Web Services",
-        },
-        {
-          key: 16,
-          imageURL: CPlusPlusSVG,
-          imageText: "Web Services",
-        },
-        {
-          key: 17,
-          imageURL: CodeIgniterSVG,
-          imageText: "Web Services",
-        },
-        {
-          key: 18,
-          imageURL: CodeIgniterSVG,
-          imageText: "Web Services",
-        },
-        {
-          key: 19,
-          imageURL: CodeIgniterSVG,
           imageText: "Web Services",
         },
       ],
@@ -177,80 +89,8 @@ class UserProfile extends React.Component {
           projectTitle: "Project-2",
           projectDescription: "This is small description about project.",
         },
-        {
-          projectTitle: "Project-3",
-          projectDescription: "This is small description about project.",
-        },
-        {
-          projectTitle: "Project-4",
-          projectDescription: "This is small description about project.",
-        },
-        {
-          projectTitle: "Project-5",
-          projectDescription: "This is small description about project.",
-        },
-        {
-          projectTitle: "Project-6",
-          projectDescription: "This is small description about project.",
-        },
-        {
-          projectTitle: "Project-7",
-          projectDescription: "This is small description about project.",
-        },
-        {
-          projectTitle: "Project-8",
-          projectDescription: "This is small description about project.",
-        },
-        {
-          projectTitle: "Project-9",
-          projectDescription: "This is small description about project.",
-        },
       ],
       contributions: [
-        {
-          projectTitle: "Project-1",
-          projectDescription: "This is small description about project.",
-        },
-        {
-          projectTitle: "Project-1",
-          projectDescription: "This is small description about project.",
-        },
-        {
-          projectTitle: "Project-1",
-          projectDescription: "This is small description about project.",
-        },
-        {
-          projectTitle: "Project-1",
-          projectDescription: "This is small description about project.",
-        },
-        {
-          projectTitle: "Project-1",
-          projectDescription: "This is small description about project.",
-        },
-        {
-          projectTitle: "Project-1",
-          projectDescription: "This is small description about project.",
-        },
-        {
-          projectTitle: "Project-1",
-          projectDescription: "This is small description about project.",
-        },
-        {
-          projectTitle: "Project-1",
-          projectDescription: "This is small description about project.",
-        },
-        {
-          projectTitle: "Project-1",
-          projectDescription: "This is small description about project.",
-        },
-        {
-          projectTitle: "Project-1",
-          projectDescription: "This is small description about project.",
-        },
-        {
-          projectTitle: "Project-1",
-          projectDescription: "This is small description about project.",
-        },
         {
           projectTitle: "Project-1",
           projectDescription: "This is small description about project.",
@@ -299,6 +139,12 @@ class UserProfile extends React.Component {
     console.log(url);
   }
 
+  resetKey() {
+    this.state.skills.forEach((skill, i) => {
+      skill.key = i + 1;
+    });
+  }
+
   renderGeneralProfile() {
     if (this.state.isEdit) {
       return (
@@ -315,9 +161,9 @@ class UserProfile extends React.Component {
               <div className="edit-username-value">
                 <FormInput
                   placeholder="Enter Name"
-                  value={this.state.name}
+                  value={this.state.username}
                   onChange={(e) => {
-                    this.setState({ name: e.target.value });
+                    this.setState({ username: e.target.value });
                   }}
                 />
               </div>
@@ -372,9 +218,9 @@ class UserProfile extends React.Component {
               <div className="edit-github-value">
                 <FormInput
                   placeholder="Github User ID"
-                  value={this.state.github}
+                  value={this.state.githubURL}
                   onChange={(e) => {
-                    this.setState({ github: e.target.value });
+                    this.setState({ githubURL: e.target.value });
                   }}
                 />
               </div>
@@ -391,9 +237,9 @@ class UserProfile extends React.Component {
               <div className="edit-linkedin-value">
                 <FormInput
                   placeholder="LinkedIN ID"
-                  value={this.state.linkedin}
+                  value={this.state.linkedinURL}
                   onChange={(e) => {
-                    this.setState({ linkedin: e.target.value });
+                    this.setState({ linkedinURL: e.target.value });
                   }}
                 />
               </div>
@@ -410,9 +256,9 @@ class UserProfile extends React.Component {
               <div className="edit-stackoverflow-value">
                 <FormInput
                   placeholder="StackOverflow ID"
-                  value={this.state.stackoverflow}
+                  value={this.state.stackoverflowURL}
                   onChange={(e) => {
-                    this.setState({ stackoverflow: e.target.value });
+                    this.setState({ stackoverflowURL: e.target.value });
                   }}
                 />
               </div>
@@ -442,7 +288,7 @@ class UserProfile extends React.Component {
             </div>
             <div className="username-value">
               <Card>
-                <span>{this.state.name}</span>
+                <span>{this.state.username}</span>
               </Card>
             </div>
           </div>
@@ -485,19 +331,19 @@ class UserProfile extends React.Component {
                 classname="github-social"
                 imageURL={GithubSVG}
                 imageText="github"
-                url={this.state.github}
+                url={this.state.githubURL}
               />
               <CustomButtonCard
                 classname="linkedin-social"
                 imageURL={LinkedinSVG}
                 imageText="linkedin"
-                url={this.state.linkedin}
+                url={this.state.linkedinURL}
               />
               <CustomButtonCard
                 classname="stackoverflow-social"
                 imageURL={StackoverflowSVG}
                 imageText="stackoverflow"
-                url={this.state.stackoverflow}
+                url={this.state.stackoverflowURL}
               />
             </CardGrid>
           </div>
@@ -505,6 +351,147 @@ class UserProfile extends React.Component {
       );
     }
   }
+
+
+  mapSkill = (skill) => {
+    var logosDict = {
+      amazon: ["aws", "web services", "amazon web services", "webservices"],
+      angularjs: ["angular", "angularjs"],
+      apache: ["apache", "apache web"],
+      appcelerator: ["appcelerator"],
+      atom: ["atom", "atom code", "atom editor"],
+      babel: ["babel"],
+      backbonejs: ["backbonejs"],
+      bitbucket: ["bitbucket"],
+      bootstrap: ["bootstrap"],
+      c: ["c", "c language"],
+      codeigniter: ["codeigniter"],
+      cplusplus: ["cplusplus", "c++", "cpp"],
+      csharp: ["csharp", "c#"],
+      css3: ["css", "css3"],
+      python: ["python", "python2", "python3", "python3.x"],
+      java: ["java"],
+      android: ["android", "android studio"],
+      swift: ["swift", "iOS"],
+      flutter: ["flutter"],
+      dart: ["dart"],
+      perl: ["perl"],
+      ruby: ["ruby"],
+      rust: ["rust"],
+      docker: ["docker", "container"],
+      kubernates: ["kubernates"],
+      html: ["html", "html5"],
+      javascript: ["javascript"],
+      reactjs: ["reactjs", "reactJS"],
+      nodejs: ["node", "nodejs", "nodeJS"],
+      php: ["php"],
+    };
+    var logoURL = OtherSVG;
+    var logoName = "other";
+    for (var key in logosDict) {
+      if (logosDict[key].includes(skill)) {
+        var logoName = key;
+      }
+    }
+
+    //use  switch case insted of if-else
+    if (logoName === "amazon") {
+      logoURL = AWSSVG;
+    }
+    if (logoName === "angularjs") {
+      logoURL = AngularjsSVG;
+    }
+    if (logoName === "apache") {
+      logoURL = ApacheSVG;
+    }
+    if (logoName === "appcelerator") {
+      logoURL = AppceleratorSVG;
+    }
+    if (logoName === "atom") {
+      logoURL = AtomSVG;
+    }
+    if (logoName === "babel") {
+      logoURL = BabelSVG;
+    }
+    if (logoName === "backbonejs") {
+      logoURL = BackBonejsSVG;
+    }
+    if (logoName === "bitbucket") {
+      logoURL = BitBucketSVG;
+    }
+    if (logoName === "bootstrap") {
+      logoURL = BootStrapSVG;
+    }
+    if (logoName === "c") {
+      logoURL = CSVG;
+    }
+    if (logoName === "codeigniter") {
+      logoURL = CodeIgniterSVG;
+    }
+    if (logoName === "cplusplus") {
+      logoURL = CPlusPlusSVG;
+    }
+    if (logoName === "csharp") {
+      logoURL = CSharpSVG;
+    }
+    if (logoName === "css3") {
+      logoURL = CSS3SVG;
+    }
+    if (logoName === "python") {
+      logoURL = PythonSVG;
+    }
+    if (logoName === "java") {
+      logoURL = JavaSVG;
+    }
+    if (logoName === "android") {
+      logoURL = AndroidSVG;
+    }
+    if (logoName === "swift") {
+      logoURL = SwiftSVG;
+    }
+    if (logoName === "flutter") {
+      logoURL = FlutterSVG;
+    }
+    if (logoName === "dart") {
+      logoURL = DartSVG;
+    }
+    if (logoName === "perl") {
+      logoURL = PerlSVG;
+    }
+    if (logoName === "ruby") {
+      logoURL = RubySVG;
+    }
+    if (logoName === "rust") {
+      logoURL = RustSVG;
+    }
+    if (logoName === "docker") {
+      logoURL = DockerSVG;
+    }
+    if (logoName === "kubernates") {
+      logoURL = KubernatesSVG;
+    }
+    if (logoName === "html") {
+      logoURL = HtmlSVG;
+    }
+    if (logoName === "javascript") {
+      logoURL = JavaScriptSVG;
+    }
+    if (logoName === "reactjs") {
+      logoURL = ReactjsSVG;
+    }
+    if (logoName === "nodejs") {
+      logoURL = NodejsSVG;
+    }
+    if (logoName === "php") {
+      logoURL = PHPSVG;
+    }
+
+    return {
+      imageText: logoName,
+      imageURL: logoURL,
+    }
+  };
+
 
   addSkill = () => {
     var logosDict = {
@@ -639,16 +626,16 @@ class UserProfile extends React.Component {
       logoURL = PHPSVG;
     }
 
-    var keyvalue = this.state.skillCount;
-    var keyvalue = keyvalue + 1;
+    // TODO: add reset key function, it is better than manualy set the keys. 
+    this.resetKey()
+    // remove key field from this dict
     this.state.skills.unshift({
-      key: keyvalue,
       imageURL: logoURL,
       imageText: `${this.state.tempSkill}`,
     });
+    // remove skill_count from state.
     this.setState({
       skills: this.state.skills,
-      skillCount: keyvalue,
       tempSkill: "",
     });
   };
@@ -679,8 +666,10 @@ class UserProfile extends React.Component {
           <br />
           <VerticalScroll height="380px">
             <div className="modify-grid">
+              {/* call reset-key function here */}
               <CardGrid gridColumn="1fr 1fr 1fr 1fr">
-                {this.state.skills.map((skill) => (
+                {this.resetKey(),
+                  this.state.skills.map((skill) => (
                   <div className="remove-skill-card">
                     <SkillCard
                       id={skill.key}
@@ -702,7 +691,8 @@ class UserProfile extends React.Component {
         <VerticalScroll height="450px">
           <div className="modify-grid">
             <CardGrid gridColumn="1fr 1fr 1fr 1fr">
-              {this.state.skills.map((skill) => (
+              {this.resetKey(),
+                this.state.skills.map((skill) => (
                 <SkillCard
                   id={skill.key}
                   imageURL={skill.imageURL}
