@@ -1,10 +1,21 @@
 import React from "react";
-import { Link } from "react-router-dom";
+import { Link, Redirect, useHistory } from "react-router-dom";
 import "./header.style.scss";
 
 import CustomButton from "../custom-button/custom-button.component";
+import axios from "axios";
+import { BASE_URL } from "../../constant";
 
 const Header = (props) => {
+  const history = useHistory()
+  // async function signOut() {
+  //   const response = await axios({
+  //     method: "POST",
+  //     url: `${BASE_URL}/signout`,
+  //     withCredentials: true
+  //   })
+  //   history.push("/")
+  // }
   return (
     <nav className="header">
       <div className="logo">
@@ -23,9 +34,7 @@ const Header = (props) => {
         <Link to="/notifications">
           <CustomButton title="Notification" />
         </Link>
-        <Link to="/">
-          <CustomButton title="Sign out" onClick={() => props.handleLogin()} />
-        </Link>
+        <CustomButton title="Sign out" onClick={() => props.signOut()} />
       </div>
     </nav>
   );

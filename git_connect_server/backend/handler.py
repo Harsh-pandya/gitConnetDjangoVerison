@@ -134,8 +134,6 @@ class SearchPageHandler:
         user_bookmarks = user["bookmarks"]
         user_contributions = user["contributions"]
         user_outgoing = user["outgoing"]
-        print("USER BOOMARK ______", user_bookmarks)
-        print("USER OUTGOING _______", user_outgoing)
         try:
             project_id_list = search[search_info["search_query"]]
         except KeyError:
@@ -153,15 +151,11 @@ class SearchPageHandler:
                 else:
                     project["bookmark"] = True if id in user_bookmarks else False
                 if user_outgoing == None:
-                    print("IF ID _____", id)
                     project["contribution"] = False
 
                 else:
-                    print("ELSE ID _____", id)
-
                     project["contribution"] = True if id in user_outgoing else False
                 projects_list.append(project)
-            print("____________-------------", projects_list)
             return projects_list
         else:
             return []
@@ -621,7 +615,6 @@ class ContributionHandler:
             "PROJECT_ID": ObjectId(contribution_dict["PROJECT_ID"]),
             "OWNER_ID": ObjectId(contribution_dict["OWNER_ID"]),
         }
-        print("Contribution Dict __________@#_#", contribution_info)
 
         ContributionHandler.remove_contribution(project_info=contribution_info)
 
@@ -632,7 +625,6 @@ class ContributionHandler:
             "PROJECT_ID": ObjectId(contribution_dict["PROJECT_ID"]),
             "OWNER_ID": ObjectId(contribution_dict["OWNER_ID"]),
         }
-        print("Contribution Dict __________@#_#", contribution_info)
 
         ContributionHandler.request_contribution(project_info=contribution_info)
 
@@ -752,3 +744,286 @@ class GithubEndpointFetch:
         )
         data = json.loads(response.content)
         return data
+
+
+class NotificationsHandler:
+    @staticmethod
+    def fetch_incoming(user_id):
+        """
+        fetch user incoming collbration requests.
+
+        Args:
+            user_id (bson.onject.ObjectId)
+
+        Returns:
+            (list):
+                {
+                    user (string)
+                    requestedProject (string)
+                }
+        """
+        user = user_collection.find_one({"_id": user_id})
+        user_incomings = [] if user["incoming"] is None else user["incoming"]
+        incomings_list = list()
+        for item in user_incomings:
+            requested_user_id = user_collection.find_one({"_id": item["user_id"]})[
+                "userid"
+            ]
+            requested_project_name = project_collection.find_one(
+                {"_id": item["project_id"]}
+            )["projectTitle"]
+            requested_project_id = project_collection.find_one(
+                {"_id": item["project_id"]}
+            )["_id"]
+            requested_project_owner = project_collection.find_one(
+                {"_id": item["project_id"]}
+            )["owner"]
+            incomings_list.append(
+                {
+                    "user": requested_user_id,
+                    "requestedProject": requested_project_name,
+                    "project_id": requested_project_id,
+                    "project_owner": requested_project_owner,
+                }
+            )
+        return incomings_list
+
+    @staticmethod
+    def fetch_outgoing(user_id):
+        """
+        fetch user outgoing contribution requests.
+
+        Args:
+            user_id (bson.onject.ObjectId)
+
+        Returns:
+            (list):
+                {
+                    status (string): set default to "Ongoing"
+                    requestedProject (string)
+
+                }
+        """
+        user = user_collection.find_one({"_id": user_id})
+        user_outgoings = [] if user["outgoing"] is None else user["outgoing"]
+        outgoings_list = list()
+        for item in user_outgoings:
+            print("Item _++++++______________", type(item))
+            requested_project_name = project_collection.find_one({"_id": item})[
+                "projectTitle"
+            ]
+            requested_project_id = project_collection.find_one({"_id": item})["_id"]
+            requested_project_owner = project_collection.find_one({"_id": item})[
+                "owner"
+            ]
+            outgoings_list.append(
+                {
+                    "status": "Ongoing",
+                    "requestedProject": requested_project_name,
+                    "project_id": requested_project_id,
+                    "project_owner": requested_project_owner,
+                }
+            )
+        return outgoings_list
+
+    @staticmethod
+    def accept_incoming(project_info):
+        """
+        accept user incoming contribution request.
+        remove request from owner incoming_list.
+        remove request from user outgoing_list.
+        add project_id to user's contribution list
+        and update user notification_bucket.
+
+        Args:
+            project_info (dict): contains following fields,
+                USER_ID (bson.object.ObjectId)
+                PROJECT_ID (bson.object.ObjectId)
+                OWNER_ID (bson.object.ObjectId)
+        """
+        user = user_collection.find_one({"_id": project_info["USER_ID"]})
+        contribution_list = user["contributions"]
+        contribution_list.append(project_info["PROJECT_ID"])
+        bucket = user["notification_bucket"]
+        bucket.append(
+            {
+                "project_id": project_info["PROJECT_ID"],
+                "status": "Accepted",
+            }
+        )
+        user_outgoing = user["outgoing"]
+        user_outgoing.remove(project_info["PROJECT_ID"])
+        user_collection.find_one_and_update(
+            {"_id": project_info["USER_ID"]},
+            {
+                "$set": {
+                    "outgoing": user_outgoing,
+                    "contributions": contribution_list,
+                    "notification_bucket": bucket,
+                }
+            },
+        )
+        owner = user_collection.find_one({"_id": project_info["OWNER_ID"]})
+        incoming_list = owner["incoming"]
+        incoming_list.remove(
+            {
+                "user_id": project_info["USER_ID"],
+                "project_id": project_info["PROJECT_ID"],
+            }
+        )
+        user_collection.find_one_and_update(
+            {"_id": project_info["OWNER_ID"]},
+            {
+                "$set": {
+                    "incoming": incoming_list,
+                }
+            },
+            upsert=False,
+        )
+        contribution_info = {
+            "USER_ID": project_info["USER_ID"],
+            "PROJECT_ID": project_info["PROJECT_ID"],
+        }
+        NotificationsHandler.add_contribution(contribution_info=contribution_info)
+
+    @staticmethod
+    def reject_incoming(project_info):
+        """
+        reject user incoming contribution request.
+        remove request from owner incoming_list.
+        remove request from user outgoing_list
+        and update user notification_bucket.
+
+        Args:
+            project_info (dict): contains following fields,
+                USER_ID (bson.object.ObjectId)
+                PROJECT_ID (bson.object.ObjectId)
+                OWNER_ID (bson.object.ObjectId)
+        """
+        user = user_collection.find_one({"_id": project_info["USER_ID"]})
+        bucket = user["notification_bucket"]
+        bucket.append(
+            {
+                "project_id": project_info["PROJECT_ID"],
+                "status": "Rejected",
+            }
+        )
+        user_outgoing = user["outgoing"]
+        user_outgoing.remove(project_info["PROJECT_ID"])
+        user_collection.find_one_and_update(
+            {"_id": project_info["USER_ID"]},
+            {
+                "$set": {
+                    "outgoing": user_outgoing,
+                    "notification_bucket": bucket,
+                }
+            },
+        )
+        owner = user_collection.find_one({"_id": project_info["OWNER_ID"]})
+        incoming_list = owner["incoming"]
+        incoming_list.remove(
+            {
+                "user_id": project_info["USER_ID"],
+                "project_id": project_info["PROJECT_ID"],
+            }
+        )
+        user_collection.find_one_and_update(
+            {"_id": project_info["OWNER_ID"]},
+            {
+                "$set": {
+                    "incoming": incoming_list,
+                }
+            },
+            upsert=False,
+        )
+
+        contribution_info = {
+            "USER_ID": project_info["USER_ID"],
+            "PROJECT_ID": project_info["PROJECT_ID"],
+        }
+        NotificationsHandler.remove_contribution(contribution_info=contribution_info)
+
+    @staticmethod
+    def handle_contribution(user_id, project_id, status):
+        """
+        add or remove contribution based on status.
+        if status is `True` then add project to user contributions list,
+        otherwise remove project from list.
+
+        Args:
+            user_id (bson.object.ObjectId):
+            project_id (bson.object.ObjectId):
+            status (bool):
+        """
+        user = user_collection.find_one({"_id": user_id})
+        contribution_list = user["contributions"]
+        if status:
+            contribution_list.append(project_id)
+        else:
+            contribution_list.remove(project_id)
+        user_collection.find_one_and_update(
+            {"_id": user_id},
+            {
+                "$set": {
+                    "contributions": contribution_list,
+                }
+            },
+            upsert=False,
+        )
+
+    @staticmethod
+    def add_contribution(contribution_info):
+        """
+        add project to user contributions list.
+
+        Args:
+            contribution_info (bson.object.ObjectId)
+        """
+        NotificationsHandler.handle_contribution(
+            contribution_info["USER_ID"], contribution_info["PROJECT_ID"], status=True
+        )
+
+    @staticmethod
+    def remove_contribution(contribution_info):
+        """
+        remove project from user contributions list.
+
+        Args:
+            contribution_info (bson.object.ObjectId)
+        """
+        NotificationsHandler.handle_contribution(
+            contribution_info["USER_ID"], contribution_info["PROJECT_ID"], status=False
+        )
+
+    @staticmethod
+    def fetch_and_process_collabrations_and_contributions():
+        user_object_id = ObjectId(get_user_object_id())
+        incoming_list = NotificationsHandler.fetch_incoming(user_id=user_object_id)
+        outgoing_list = NotificationsHandler.fetch_outgoing(user_id=user_object_id)
+        for incoming in incoming_list:
+            incoming["project_id"] = str(incoming["project_id"])
+            incoming["project_owner"] = str(incoming["project_owner"])
+        for outgoing in outgoing_list:
+            outgoing["project_id"] = str(outgoing["project_id"])
+            outgoing["project_owner"] = str(outgoing["project_owner"])
+        return {"collaborations": incoming_list, "contributions": outgoing_list}
+
+    @staticmethod
+    def fetch_and_accept_colloboration_request(project_dict):
+        user_object_id = ObjectId(get_user_object_id())
+        project_info = {
+            "USER_ID": user_object_id,
+            "PROJECT_ID": ObjectId(project_dict["project_id"]),
+            "OWNER_ID": ObjectId(project_dict["project_owner"]),
+        }
+        NotificationsHandler.accept_incoming(project_info=project_info)
+
+    @staticmethod
+    def fetch_and_reject_colloboration_request(project_dict):
+        user_object_id = ObjectId(get_user_object_id())
+        project_info = {
+            "USER_ID": user_object_id,
+            "PROJECT_ID": ObjectId(project_dict["project_id"]),
+            "OWNER_ID": ObjectId(project_dict["project_owner"]),
+        }
+        NotificationsHandler.reject_incoming(project_info=project_info)

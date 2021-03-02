@@ -13,50 +13,80 @@ import ContributionNotificationCard from "../../components/contribution-notifica
 
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import axios from "axios";
+import { BASE_URL } from '../../constant'
 
 class Notification extends React.Component {
   constructor() {
     super();
 
     this.state = {
-      collabrations: [
-        {
-          user: "purvesh", //user-name
-          requestedProject: "gitConnet-1", //project-name
-        },
-        {
-          user: "purvesh",
-          requestedProject: "gitConnet-2",
-        },
-      ],
-      contributions: [
-        {
-          status: "Ongoing",
-          requestedProject: "gitConnet-1",
-        },
-        {
-          status: "Ongoing",
-          requestedProject: "gitConnet-2",
-        },
-      ],
+      collaborations: [],
+      contributions: []
     };
   }
-
-  acceptCollabartion() {
+  async componentDidMount() {
+    const response = await axios({
+      method: "GET",
+      url: `${BASE_URL}/notification-view`,
+      withCredentials: true
+    })
+    this.setState({
+      "collaborations": response.data["collaborations"],
+      "contributions": response.data["contributions"]
+    })
+  }
+  async acceptCollaboration(id) {
+    const accept_collaboration = await axios({
+      method: "POST",
+      url: `${BASE_URL}/notification-view`,
+      data: {
+        "data": this.state.collaborations[id - 1],
+        "status": "accept"
+      },
+      withCredentials: true
+    })
+    const response = await axios({
+      method: "GET",
+      url: `${BASE_URL}/notification-view`,
+      withCredentials: true
+    })
+    this.setState({
+      "collaborations": response.data["collaborations"],
+      "contributions": response.data["contributions"]
+    })
     toast.success("You find a Collabrator!!");
   }
 
-  rejectCollabration() {
-    toast.error("Collabration Request Rejected.");
+  async rejectCollaboration(id) {
+    const reject_collaboration = await axios({
+      method: "POST",
+      url: `${BASE_URL}/notification-view`,
+      data: {
+        "data": this.state.collaborations[id - 1],
+        "status": "reject"
+      },
+      withCredentials: true
+    })
+    const response = await axios({
+      method: "GET",
+      url: `${BASE_URL}/notification-view`,
+      withCredentials: true
+    })
+    this.setState({
+      "collaborations": response.data["collaborations"],
+      "contributions": response.data["contributions"]
+    })
+    toast.error("Collaboration Request Rejected.");
   }
 
   removeNotification() {
     toast.error("Notification Removed from Tray.");
   }
 
-  resetCollabrationKey() {
-    this.state.collabrations.forEach((collabration, i) => {
-      collabration.key = i + 1;
+  resetCollaborationKey() {
+    this.state.collaborations.forEach((collaborations, i) => {
+      collaborations.key = i + 1;
     });
   }
 
@@ -66,20 +96,27 @@ class Notification extends React.Component {
     });
   }
 
-  removeCollbrationProject = (id) => {
-    this.setState({
-      collabrations: this.state.collabrations.filter((project) => {
-        return project.key !== id;
-      }),
-    });
-  };
 
-  removeContributionProject = (id) => {
+  async removeContributionProject(id) {
+    const remove_contribution = await axios({
+      method: "DELETE",
+      url: `${BASE_URL}/contribution-view`,
+      data: {
+        "PROJECT_ID": this.state.contributions[id - 1]["project_id"],
+        "OWNER_ID": this.state.contributions[id - 1]["project_owner"],
+      },
+      withCredentials: true
+    })
+    const response = await axios({
+      method: "GET",
+      url: `${BASE_URL}/notification-view`,
+      withCredentials: true
+    })
     this.setState({
-      contributions: this.state.contributions.filter((project) => {
-        return project.key !== id;
-      }),
-    });
+      "collaborations": response.data["collaborations"],
+      "contributions": response.data["contributions"]
+    })
+    toast.error("Notification Removed from Tray.");
   };
 
   render() {
@@ -95,28 +132,26 @@ class Notification extends React.Component {
             <VerticalScroll height="520px">
               <CardList>
                 {
-                  (this.resetCollabrationKey(),
-                  this.state.collabrations.map((collabration) => (
-                    <CollabrationNotificationCard
-                      user={collabration.user}
-                      requestedProject={collabration.requestedProject}
-                    >
-                      <CustomButton
-                        title="Accept"
-                        onClick={() => (
-                          this.removeCollbrationProject(collabration.key),
-                          this.acceptCollabartion()
-                        )}
-                      />
-                      <CustomButton
-                        title="Reject"
-                        onClick={() => (
-                          this.removeCollbrationProject(collabration.key),
-                          this.rejectCollabration()
-                        )}
-                      />
-                    </CollabrationNotificationCard>
-                  )))
+                  (this.resetCollaborationKey(),
+                    this.state.collaborations.map((collaborations) => (
+                      <CollabrationNotificationCard
+                        user={collaborations.user}
+                        requestedProject={collaborations.requestedProject}
+                      >
+                        <CustomButton
+                          title="Accept"
+                          onClick={() => (
+                            this.acceptCollaboration(collaborations.key)
+                          )}
+                        />
+                        <CustomButton
+                          title="Reject"
+                          onClick={() => (
+                            this.rejectCollaboration(collaborations.key)
+                          )}
+                        />
+                      </CollabrationNotificationCard>
+                    )))
                 }
               </CardList>
             </VerticalScroll>
@@ -127,20 +162,19 @@ class Notification extends React.Component {
               <CardList>
                 {
                   (this.resetContributionKey(),
-                  this.state.contributions.map((contribution) => (
-                    <ContributionNotificationCard
-                      requestedProject={contribution.requestedProject}
-                      status={contribution.status}
-                    >
-                      <CustomButton
-                        title="Remove"
-                        onClick={() => (
-                          this.removeContributionProject(contribution.key),
-                          this.removeNotification()
-                        )}
-                      />
-                    </ContributionNotificationCard>
-                  )))
+                    this.state.contributions.map((contribution) => (
+                      <ContributionNotificationCard
+                        requestedProject={contribution.requestedProject}
+                        status={contribution.status}
+                      >
+                        <CustomButton
+                          title="Remove"
+                          onClick={() => (
+                            this.removeContributionProject(contribution.key)
+                          )}
+                        />
+                      </ContributionNotificationCard>
+                    )))
                 }
               </CardList>
             </VerticalScroll>

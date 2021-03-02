@@ -11,6 +11,8 @@ from backend.views import (
     UserView,
     BookmarkView,
     ContributionView,
+    NotificationView,
+    SignOutView,
 )
 
 urls = [
@@ -28,4 +30,6 @@ urls = [
     path("user-view", UserView.as_view(), name="UserView"),
     path("bookmark-view", BookmarkView.as_view(), name="BookmarkView"),
     path("contribution-view", ContributionView.as_view(), name="ContributionView"),
+    path("notification-view", NotificationView.as_view(), name="NotificationView"),
+    path("signout", SignOutView.as_view(), name="SignOutView"),
 ]

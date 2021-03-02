@@ -11,51 +11,88 @@ import { BASE_URL } from './constant'
 import { Switch, BrowserRouter as Router, Route, Redirect } from 'react-router-dom';
 import axios from 'axios';
 
+{/* < Route {...rest} component={(props) => (
+  auth ? (
+    console.log("True")
+    // <Component {...props} />
+  ) : (
+      console.log("False")
 
-function PrivateRoute({ exact, path, component: Component }) {
-  const [login, setLogin] = React.useState(false)
-  const validate = async () => {
+      // <Redirect to="/" />
+    )
+)
+} /> */}
+function PrivateRoute({ auth, component: Component, ...rest }) {
+  console.log(auth)
+  return (
+    <Route
+      {...rest}
+      render={props =>
+        auth === true ? (
+          <Component {...props} />
+        ) : (
+            <Redirect
+              to={{
+                pathname: "/"
+              }}
+            />
+          )
+      }
+    />
+  )
+
+}
+class App extends React.Component {
+  constructor() {
+    super()
+    this.state = {
+      login: false
+    }
+    this.signOut = this.signOut.bind(this)
+  }
+  async signOut() {
+    const response = await axios({
+      method: "POST",
+      url: `${BASE_URL}/signout`,
+      withCredentials: true
+    })
+    this.setState({
+      login: false
+    })
+  }
+  async componentDidMount() {
     const response = await axios({
       method: "POST",
       url: `${BASE_URL}/page-validation`,
       withCredentials: true
     })
     if (response.data.status === "OK") {
-      setLogin(true)
+      // console.log(`In IF ${response.data.status}`)
+      this.setState({
+        login: true
+      })
     }
     else if (response.data.status === "ERROR") {
-      setLogin(false)
+      // console.log(`In ELSE ${response.data.status}`)
+      this.setState({
+        login: false
+      })
     }
-    return login
   }
-  return (
-    validate() ? (
-      <>
-        <Route exact path={path} component={Component} />
-      </>
-    ) : (
-        <>
-          <Redirect to="/" />
-        </>
-      )
-  )
-
-}
-class App extends React.Component {
-
-
 
   renderPage() {
     return (
       <Router>
-        <Header />
+        <Header signOut={this.signOut} />
         <br /><br />
         <Switch>
-          <Route exact path="/" component={MainPage} />
-          <PrivateRoute exact path="/search" component={SearchPage} />
-          <PrivateRoute exact path="/profile" component={UserProfile} />
-          <PrivateRoute exact path="/projects" component={UserProject} />
-          <PrivateRoute exact path="/notifications" component={Notification} />
+          <Route exact path="/" >
+            <MainPage />
+          </Route>
+          <PrivateRoute auth={this.state.login} exact path="/search" component={SearchPage} />
+          <PrivateRoute auth={this.state.login} exact path="/profile" component={UserProfile} />
+          <PrivateRoute auth={this.state.login} exact path="/projects" component={UserProject} />
+          <PrivateRoute auth={this.state.login} exact path="/notifications" component={Notification} />
           <Route component={PageNotFound} />
         </Switch>
       </Router>

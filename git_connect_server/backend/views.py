@@ -12,8 +12,10 @@ from backend.handler import (
     UserHandler,
     BookmarkHandler,
     ContributionHandler,
+    NotificationsHandler,
 )
 import json
+import logging
 
 
 class GithubOAuth(APIView):
@@ -25,7 +27,7 @@ class GithubOAuth(APIView):
         # Store User object id
         user_object_id = StoreUser.fetch_and_crete_user_details()
         request.session["user_object_id"] = user_object_id
-        return HttpResponseRedirect("http://localhost:3000/search")
+        return HttpResponseRedirect("http://localhost:3000")
 
 
 class TestEndPoint(APIView):
@@ -37,6 +39,7 @@ class TestEndPoint(APIView):
 class PageValidation(APIView):
     def post(self, request: Request):
         access_token = request.session.get("access_token", None)
+        print(access_token)
         if access_token is None:
             return Response(
                 data={
@@ -102,7 +105,6 @@ class BookmarkView(APIView):
 class ContributionView(APIView):
     def delete(self, request: Request):
         data = json.loads(request.body)
-        print(data)
         ContributionHandler.fetch_and_remove_contribution_info(contribution_dict=data)
         return Response()
 
@@ -121,3 +123,35 @@ class UserView(APIView):
         data = json.loads(request.body)
         UserHandler.fetch_and_update_user_info(user_info=data)
         return Response()
+
+
+class NotificationView(APIView):
+    def get(self, request: Request):
+        data = NotificationsHandler.fetch_and_process_collabrations_and_contributions()
+        return Response(data=data)
+
+    def post(self, request: Request):
+        data = json.loads(request.body)
+        if data["status"] == "accept":
+            NotificationsHandler.fetch_and_accept_colloboration_request(
+                project_dict=data["data"]
+            )
+        elif data["status"] == "reject":
+            NotificationsHandler.fetch_and_reject_colloboration_request(
+                project_dict=data["data"]
+            )
+        return Response()
+
+
+class SignOutView(APIView):
+    def post(self, request: Request):
+        logging.info(f"Removing all the session key so as to sign out user")
+        del request.session["access_token"]
+        del request.session["user_object_id"]
+        return Response()
+
+
+"""
+    Future Requirements [@team]:
+     - When user accept an incoming request show total number of user under that project .
+"""
